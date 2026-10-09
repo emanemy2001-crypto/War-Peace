@@ -1,0 +1,1577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>War and Peace: Mind Map, Philosophy & Timeline Atlas</title>
+  <style>
+    :root {
+      --bg: #0f141c;
+      --bg-panel: #161e2a;
+      --bg-card: #1c2636;
+      --border: #2c3a50;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --gold: #d4af37;
+      --gold-light: #fef08a;
+      --blue: #38bdf8;
+      --red: #f87171;
+      --emerald: #34d399;
+      --purple: #c084fc;
+      --amber: #fbbf24;
+      --font-serif: "Georgia", "Baskerville", "Palatino Linotype", serif;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Top Navigation Header */
+    header {
+      background: linear-gradient(180deg, #182232 0%, #121924 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      z-index: 20;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: baseline;
+      gap: 0.75rem;
+    }
+
+    .brand-title {
+      font-family: var(--font-serif);
+      font-size: 1.4rem;
+      color: var(--gold);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .brand-sub {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+    }
+
+    .tab-nav {
+      display: flex;
+      background: #0b0f16;
+      padding: 3px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .tab-btn.active {
+      background: var(--bg-card);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+      border: 1px solid var(--gold);
+    }
+
+    .tab-btn:hover:not(.active) {
+      color: #fff;
+    }
+
+    /* Main Container */
+    main {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tab-view {
+      position: absolute;
+      inset: 0;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .tab-view.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    /* ========================================================
+       TAB 1: MIND MAP & NETWORK VIEW
+       ======================================================== */
+    #view-mindmap {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    #graph-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: grab;
+    }
+
+    #graph-canvas:active { cursor: grabbing; }
+
+    .graph-controls {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      z-index: 10;
+      background: rgba(22, 30, 42, 0.92);
+      backdrop-filter: blur(8px);
+      padding: 0.75rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      max-width: 320px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    }
+
+    .filter-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .filter-pill {
+      font-size: 0.72rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #0d131c;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .filter-pill.active {
+      border-color: var(--gold);
+      background: rgba(212, 175, 55, 0.15);
+      color: #fff;
+    }
+
+    .search-input {
+      background: #0d131c;
+      border: 1px solid var(--border);
+      padding: 0.45rem 0.75rem;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 0.8rem;
+      outline: none;
+    }
+
+    .search-input:focus { border-color: var(--gold); }
+
+    .canvas-legend {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+      border-top: 1px solid var(--border);
+      padding-top: 0.5rem;
+    }
+
+    /* Node Inspector Drawer */
+    .inspector-drawer {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      bottom: 1rem;
+      width: 380px;
+      background: rgba(22, 30, 42, 0.95);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: -8px 0 32px rgba(0,0,0,0.6);
+      display: flex;
+      flex-direction: column;
+      z-index: 10;
+      transform: translateX(110%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      overflow: hidden;
+    }
+
+    .inspector-drawer.open {
+      transform: translateX(0);
+    }
+
+    .inspector-header {
+      padding: 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      background: rgba(15, 20, 28, 0.6);
+    }
+
+    .inspector-tag {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      display: inline-block;
+      margin-bottom: 0.4rem;
+    }
+
+    .inspector-title {
+      font-family: var(--font-serif);
+      font-size: 1.25rem;
+      color: #fff;
+      line-height: 1.2;
+    }
+
+    .close-inspector {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1.4rem;
+      line-height: 1;
+      padding: 0.2rem;
+    }
+    .close-inspector:hover { color: #fff; }
+
+    .inspector-body {
+      padding: 1.25rem;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .info-section h4 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--gold);
+      margin-bottom: 0.4rem;
+    }
+
+    .info-section p {
+      font-size: 0.85rem;
+      line-height: 1.55;
+      color: #cbd5e1;
+    }
+
+    .quote-box {
+      font-family: var(--font-serif);
+      font-style: italic;
+      border-left: 2px solid var(--gold);
+      padding: 0.6rem 0.8rem;
+      background: rgba(212, 175, 55, 0.06);
+      font-size: 0.85rem;
+      line-height: 1.5;
+      color: #e2e8f0;
+    }
+
+    .connections-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .connection-chip {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 0.3rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      color: #cbd5e1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .connection-chip:hover {
+      border-color: var(--gold);
+      color: #fff;
+    }
+
+    /* ========================================================
+       TAB 2: HISTORICAL TIMELINE VIEW
+       ======================================================== */
+    #view-timeline {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+      overflow-y: auto;
+      padding: 2rem;
+    }
+
+    .timeline-container {
+      max-width: 900px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .timeline-header {
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .timeline-header h2 {
+      font-family: var(--font-serif);
+      font-size: 2rem;
+      color: var(--gold);
+      margin-bottom: 0.5rem;
+    }
+
+    .timeline-header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      max-width: 680px;
+      margin: 0 auto;
+      line-height: 1.5;
+    }
+
+    .timeline-filters {
+      display: flex;
+      justify-content: center;
+      gap: 0.6rem;
+      margin-top: 1.25rem;
+    }
+
+    .t-filter-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 0.45rem 1rem;
+      font-size: 0.82rem;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .t-filter-btn.active, .t-filter-btn:hover {
+      border-color: var(--gold);
+      background: rgba(212, 175, 55, 0.15);
+      color: #fff;
+    }
+
+    /* Vertical Timeline track */
+    .timeline-tree {
+      position: relative;
+      margin-top: 2rem;
+      padding-left: 2rem;
+    }
+
+    .timeline-tree::before {
+      content: "";
+      position: absolute;
+      left: 7px;
+      top: 10px;
+      bottom: 20px;
+      width: 2px;
+      background: linear-gradient(180deg, var(--gold) 0%, var(--border) 95%);
+    }
+
+    .timeline-year-group {
+      margin-bottom: 2.5rem;
+    }
+
+    .year-header {
+      display: inline-block;
+      font-family: var(--font-serif);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--gold);
+      background: var(--bg-panel);
+      border: 1px solid var(--gold);
+      padding: 0.3rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 1.5rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    .timeline-card {
+      position: relative;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.1rem 1.4rem;
+      margin-bottom: 1.2rem;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .timeline-card:hover {
+      transform: translateX(4px);
+      border-color: var(--gold);
+    }
+
+    .timeline-card::before {
+      content: "";
+      position: absolute;
+      left: -2.35rem;
+      top: 1.3rem;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--gold);
+      border: 3px solid var(--bg);
+      box-shadow: 0 0 0 2px var(--gold);
+    }
+
+    .timeline-date-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .t-date {
+      font-family: var(--font-serif);
+      font-size: 1.1rem;
+      color: var(--gold-light);
+      font-weight: 700;
+    }
+
+    .t-category-badge {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      background: #0f172a;
+      border: 1px solid var(--border);
+    }
+
+    .badge-battle { border-color: var(--red); color: var(--red); }
+    .badge-treaty { border-color: var(--blue); color: var(--blue); }
+    .badge-movement { border-color: var(--amber); color: var(--amber); }
+    .badge-fictional { border-color: var(--purple); color: var(--purple); }
+
+    .t-event-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .t-event-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .t-connection-ref {
+      font-size: 0.75rem;
+      color: var(--gold);
+      margin-top: 0.3rem;
+    }
+
+    /* ========================================================
+       TAB 3: STRUCTURED ATLAS VIEW
+       ======================================================== */
+    #view-atlas {
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+      padding: 2.5rem;
+      background: var(--bg);
+    }
+
+    .atlas-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 3rem;
+    }
+
+    .atlas-section-title {
+      font-family: var(--font-serif);
+      font-size: 1.6rem;
+      color: var(--gold);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .atlas-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .atlas-card:hover {
+      border-color: var(--gold);
+      transform: translateY(-2px);
+    }
+
+    .atlas-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .atlas-card-title {
+      font-family: var(--font-serif);
+      font-size: 1.2rem;
+      color: #fff;
+    }
+
+    .atlas-card-role {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .atlas-card-text {
+      font-size: 0.85rem;
+      color: #cbd5e1;
+      line-height: 1.55;
+    }
+
+    .atlas-card-theme {
+      font-size: 0.75rem;
+      color: var(--gold);
+      border-top: 1px solid rgba(255,255,255,0.05);
+      padding-top: 0.5rem;
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header>
+    <div class="brand-group">
+      <div class="brand-title">War &amp; Peace</div>
+      <div class="brand-sub">Tolstoyan Atlas &amp; Historical Mind Map</div>
+    </div>
+
+    <div class="tab-nav">
+      <button class="tab-btn active" data-tab="mindmap">
+        <span>🕸️</span> Mind Map Graph
+      </button>
+      <button class="tab-btn" data-tab="timeline">
+        <span>📜</span> Historical Timeline
+      </button>
+      <button class="tab-btn" data-tab="atlas">
+        <span>📖</span> Character &amp; Principle Atlas
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Viewports -->
+  <main>
+    <!-- 1. MIND MAP CANVAS VIEW -->
+    <section id="view-mindmap" class="tab-view active">
+      <div class="graph-controls">
+        <input type="text" id="node-search" class="search-input" placeholder="Search character or theme...">
+        <div class="filter-pills" id="category-filters">
+          <div class="filter-pill active" data-category="all">All Spheres</div>
+          <div class="filter-pill" data-category="principle">Philosophy</div>
+          <div class="filter-pill" data-category="historical">Historical</div>
+          <div class="filter-pill" data-category="bolkonsky">Bolkonsky</div>
+          <div class="filter-pill" data-category="bezukhov">Bezukhov</div>
+          <div class="filter-pill" data-category="rostov">Rostov</div>
+          <div class="filter-pill" data-category="kuragin">Kuragin</div>
+        </div>
+        <div class="canvas-legend">
+          Drag nodes to explore. Scroll to zoom. Click any node to open the Tolstoyan character/principle study.
+        </div>
+      </div>
+
+      <canvas id="graph-canvas"></canvas>
+
+      <!-- Slide-in Inspector Drawer -->
+      <aside class="inspector-drawer" id="inspector-drawer">
+        <div class="inspector-header">
+          <div>
+            <span class="inspector-tag" id="inspect-tag">Category</span>
+            <h3 class="inspector-title" id="inspect-title">Character Name</h3>
+          </div>
+          <button class="close-inspector" id="btn-close-inspector">&times;</button>
+        </div>
+        <div class="inspector-body">
+          <div class="info-section">
+            <h4>Tolstoyan Archetype &amp; Role</h4>
+            <p id="inspect-role">Description here...</p>
+          </div>
+          <div class="info-section">
+            <h4>Narrative Arc &amp; Meaning</h4>
+            <p id="inspect-desc">Arc details...</p>
+          </div>
+          <div class="info-section" id="inspect-quote-section">
+            <h4>Thematic Excerpt</h4>
+            <div class="quote-box" id="inspect-quote">Quote text...</div>
+          </div>
+          <div class="info-section">
+            <h4>Connected Nodes</h4>
+            <div class="connections-list" id="inspect-connections"></div>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <!-- 2. HISTORICAL TIMELINE VIEW -->
+    <section id="view-timeline" class="tab-view">
+      <div class="timeline-container">
+        <div class="timeline-header">
+          <h2>Chronology of the Napoleonic Wars (1805–1812)</h2>
+          <p>
+            Chronological military movements, diplomatic summits, and pivotal narrative intersections compiled from the text of <em>War and Peace</em>.
+          </p>
+          <div class="timeline-filters">
+            <button class="t-filter-btn active" data-campaign="all">All Events</button>
+            <button class="t-filter-btn" data-campaign="1805">1805 Campaign</button>
+            <button class="t-filter-btn" data-campaign="1807">1807 Campaign &amp; Tilsit</button>
+            <button class="t-filter-btn" data-campaign="1812">1812 Invasion of Russia</button>
+          </div>
+        </div>
+
+        <div class="timeline-tree" id="timeline-list">
+          <!-- Rendered via JavaScript -->
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. STRUCTURED ATLAS VIEW -->
+    <section id="view-atlas" class="tab-view">
+      <div class="atlas-container" id="atlas-content">
+        <!-- Rendered via JavaScript -->
+      </div>
+    </section>
+  </main>
+
+  <!-- DATA & APPLICATION LOGIC -->
+  <script>
+    /* ========================================================
+       DATA STORE: PRINCIPLES, CHARACTERS, & RELATIONSHIPS
+       ======================================================== */
+    const DATA = {
+      nodes: [
+        // PHILOSOPHICAL PRINCIPLES
+        {
+          id: "phil_fatalism",
+          label: "Illusion of the 'Great Man'",
+          category: "principle",
+          color: "#eab308",
+          role: "Tolstoyan Philosophy of History",
+          desc: "Kings and generals are mere instruments of history. They appear to give orders, but their commands merely label actions predetermined by the collective momentum of thousands.",
+          quote: "A king is history's slave. History, that is, the unconscious, general, swarm life of mankind, uses every moment of the life of kings as a tool for its own purposes.",
+          connections: ["napoleon", "kutuzov", "alexander"]
+        },
+        {
+          id: "phil_fog",
+          label: "The Fog of War",
+          category: "principle",
+          color: "#f59e0b",
+          role: "Realist Military Philosophy",
+          desc: "Battles are fundamentally chaotic, governed by morale and accident rather than strategic masterplans. General staff diagrams fail to reflect front-line reality.",
+          quote: "Military science, seeing in all history only the will of Napoleon and Alexander, sees the movement of millions as directed by these two men alone.",
+          connections: ["bagration", "kutuzov", "andrei"]
+        },
+        {
+          id: "phil_brotherhood",
+          label: "Universal Brotherhood",
+          category: "principle",
+          color: "#10b981",
+          role: "Spiritual & Ethical Principle",
+          desc: "The realization that vanity, class distinctions, and intellectual arrogance must yield to simple love, humility, and harmony with fellow beings.",
+          quote: "He felt that he had ceased to be a separate being and was now part of a whole.",
+          connections: ["pierre", "platon", "marya"]
+        },
+        {
+          id: "phil_peace",
+          label: "Organic Domestic Peace",
+          category: "principle",
+          color: "#34d399",
+          role: "Societal Principle",
+          desc: "Authentic living takes place not in statecraft or battlefield slaughter, but in ordinary familial existence, child-rearing, land stewardship, and sincere emotional ties.",
+          quote: "The absence of suffering, the satisfaction of one's needs and consequent freedom in the choice of one's occupation, that is, of one's manner of life, now seemed to Pierre to be indubitably the highest happiness.",
+          connections: ["natasha", "pierre", "nikolai_rostov", "marya"]
+        },
+
+        // HISTORICAL FIGURES
+        {
+          id: "napoleon",
+          label: "Napoleon Bonaparte",
+          category: "historical",
+          color: "#ef4444",
+          role: "Emperor of France",
+          desc: "Tolstoy portrays Napoleon not as a military titan, but as an ego-blind actor strutting on the stage of history, unaware that his decisions are puppet movements dictated by mass forces.",
+          quote: "He was like a child holding the reins attached to the inside of a carriage, imagining that it was he who was driving it.",
+          connections: ["phil_fatalism", "kutuzov", "andrei", "alexander"]
+        },
+        {
+          id: "kutuzov",
+          label: "Mikhail Kutuzov",
+          category: "historical",
+          color: "#3b82f6",
+          role: "Russian Commander-in-Chief",
+          desc: "The ideal Tolstoyan leader: patient, passive, and wise. Kutuzov understands that battles are won not by rigid maneuvers, but by the spirit of the soldiers and the flow of time.",
+          quote: "Patience and time are my warriors, my champions!",
+          connections: ["phil_fatalism", "phil_fog", "napoleon", "andrei", "bagration"]
+        },
+        {
+          id: "alexander",
+          label: "Tsar Alexander I",
+          category: "historical",
+          color: "#60a5fa",
+          role: "Emperor of Russia",
+          desc: "Handsome, idealized, and easily swayed. Revered by young officers like Nikolai Rostov, yet Tolstoy reveals his diplomatic vanity and theatrical detachment from the horrors of war.",
+          quote: "He was the idol of the Russian army, whose glance alone filled youthful hearts with ecstasy.",
+          connections: ["napoleon", "nikolai_rostov", "phil_fatalism"]
+        },
+        {
+          id: "bagration",
+          label: "Pyotr Bagration",
+          category: "historical",
+          color: "#38bdf8",
+          role: "Russian General & Vanguard Leader",
+          desc: "Courageous frontline officer who shines at Schöngrabern and Borodino. His genius lies in making chaotic frontline actions look like intentional orders, thus keeping morale steadfast.",
+          quote: "Prince Bagration merely listened, nodded, and let events take their course, knowing it was impossible to direct thousands of fighting men.",
+          connections: ["andrei", "kutuzov", "phil_fog"]
+        },
+        {
+          id: "barclay",
+          label: "Barclay de Tolly",
+          category: "historical",
+          color: "#64748b",
+          role: "Minister of War & General",
+          desc: "Methodical, cerebral general of foreign heritage. Misunderstood and reviled by Russian society for his strategic scorched-earth retreat, though militarily sound.",
+          quote: "He carried out the retreat with calmness and skill, bearing the blame for circumstances beyond any one man's control.",
+          connections: ["kutuzov", "napoleon"]
+        },
+
+        // BOLKONSKY FAMILY
+        {
+          id: "andrei",
+          label: "Prince Andrei Bolkonsky",
+          category: "bolkonsky",
+          color: "#818cf8",
+          role: "Disillusioned Hero & Seeker of Honor",
+          desc: "Intellectually brilliant, proud, and cynical. Yearns for his 'Toulon' (glory) at Austerlitz, experiences epiphanies looking at the endless sky, falls in love with Natasha, and finds transcendent peace before death.",
+          quote: "How was it I did not see that lofty sky before? And how happy I am to have at last found it! Yes! All is vanity, all is delusion, except that infinite sky.",
+          connections: ["natasha", "pierre", "kutuzov", "napoleon", "marya", "old_bolkonsky"]
+        },
+        {
+          id: "marya",
+          label: "Princess Marya Bolkonskaya",
+          category: "bolkonsky",
+          color: "#a78bfa",
+          role: "Deeply Pious Sister of Andrei",
+          desc: "Endures the cruel eccentricities of her father with Christian patience. Her plain exterior masks profound inner luminosity, which ultimately grounds and redeems Nikolai Rostov.",
+          quote: "She looked at people not with her eyes, but with her soul, which beamed from her deep, luminous gaze.",
+          connections: ["andrei", "old_bolkonsky", "nikolai_rostov", "phil_brotherhood"]
+        },
+        {
+          id: "old_bolkonsky",
+          label: "Prince Nikolai Bolkonsky",
+          category: "bolkonsky",
+          color: "#6366f1",
+          role: "Enlightenment Patriarch of Bald Hills",
+          desc: "Former general of Catherine the Great; eccentric, hyper-rational, and despotic. Demands mathematical rigor and disdains human sentiment, breaking down mentally as Napoleon invades.",
+          quote: "There are only two sources of human vices: idleness and superstition, and only two virtues: activity and intelligence.",
+          connections: ["andrei", "marya"]
+        },
+
+        // BEZUKHOV SPHERE
+        {
+          id: "pierre",
+          label: "Pierre Bezukhov",
+          category: "bezukhov",
+          color: "#38bdf8",
+          role: "The Spiritual Pilgrim & Wealthy Heir",
+          desc: "Tolstoy's alter-ego: clumsy, earnest, and deeply moral. Struggles through debauchery, marriage to Hélène, Freemasonry, and French captivity before finding simple happiness with Natasha.",
+          quote: "Pierre looked at the sky and the depth of the twinkling stars. 'And all that is me, and all that is within me, and all that is created by me!' thought Pierre.",
+          connections: ["andrei", "natasha", "helene", "platon", "phil_brotherhood", "phil_peace"]
+        },
+        {
+          id: "platon",
+          label: "Platon Karataev",
+          category: "bezukhov",
+          color: "#2dd4bf",
+          role: "The Peasant Archetype",
+          desc: "A common soldier Pierre meets in captivity. He has no attachments, bears no malice, and speaks in natural proverbs. He embodies the round, perfect soul of the Russian peasantry.",
+          quote: "Karataev had no attachments, no friends, no enemies. He loved everyone and lived with everybody with whom his life brought him into contact.",
+          connections: ["pierre", "phil_brotherhood"]
+        },
+
+        // ROSTOV FAMILY
+        {
+          id: "natasha",
+          label: "Natasha Rostova",
+          category: "rostov",
+          color: "#f472b6",
+          role: "The Soul of Youth and Life",
+          desc: "Impulsive, musical, and vibrantly alive. Natasha lives by intuition rather than cold logic. She breaks Andrei's heart when seduced by Anatole, but matures into devotion with Pierre.",
+          quote: "She was fascinating, not because she was beautiful, but because of her overflow of youth and capacity for happiness.",
+          connections: ["andrei", "pierre", "anatole", "nikolai_rostov", "phil_peace"]
+        },
+        {
+          id: "nikolai_rostov",
+          label: "Nikolai Rostov",
+          category: "rostov",
+          color: "#fb923c",
+          role: "Straightforward Hussar Officer",
+          desc: "Honest, loyal, and traditional. Values practical soldierly duty over philosophical dilemmas. Rescues Princess Marya and marries her, saving the Rostov estate from financial ruin.",
+          quote: "He was a good officer because he did not think, but obeyed and executed orders with straightforward courage.",
+          connections: ["natasha", "marya", "alexander", "phil_peace"]
+        },
+        {
+          id: "sonya",
+          label: "Sonya Rostova",
+          category: "rostov",
+          color: "#fbbf24",
+          role: "The Self-Sacrificing Cousin",
+          desc: "The poor cousin raised by the Rostovs. Eternally devoted to Nikolai, she willingly releases him from his promise so he can marry the wealthy Marya Bolkonskaya.",
+          quote: "She was the barren flower of the family, giving all and possessing nothing.",
+          connections: ["nikolai_rostov", "natasha"]
+        },
+
+        // KURAGIN FAMILY
+        {
+          id: "helene",
+          label: "Hélène Kuragina",
+          category: "kuragin",
+          color: "#ec4899",
+          role: "Society Siren & Aristocratic Cynic",
+          desc: "Statuesque and socially idolized, yet shallow, morally bankrupt, and opportunistic. Traps Pierre into an unhappy marriage and moves comfortably in salon intrigues.",
+          quote: "She was so charming and dazzling that she did not need to speak; her smile was enough.",
+          connections: ["pierre", "vasily_kuragin", "anatole"]
+        },
+        {
+          id: "anatole",
+          label: "Anatole Kuragin",
+          category: "kuragin",
+          color: "#f43f5e",
+          role: "Reckless Hedonist & Seducer",
+          desc: "Handsome and entirely devoid of conscience. Attempts to elope with the betrothed Natasha Rostova despite having a secret wife in Poland, wrecking her happiness.",
+          quote: "He lived entirely for the moment, sincerely believing that the world had been made solely for his amusement.",
+          connections: ["helene", "natasha", "vasily_kuragin"]
+        },
+        {
+          id: "vasily_kuragin",
+          label: "Prince Vasily Kuragin",
+          category: "kuragin",
+          color: "#9f1239",
+          role: "Courtier & Matchmaker",
+          desc: "The consummate Saint Petersburg bureaucrat. Masters the art of advancing his family's fortunes through lucrative marriages, flattery, and court politics.",
+          quote: "He never thought out plans, but the desire for wealth and position was the very essence of his being.",
+          connections: ["helene", "anatole", "pierre"]
+        }
+      ],
+
+      // Historical events from Tolstoy's chronicle
+      timelineEvents: [
+        {
+          year: "1805",
+          date: "11 Oct.",
+          campaign: "1805",
+          type: "movement",
+          title: "Kutuzov inspects regiment near Braunau",
+          desc: "Russian forces arrive in Austria. Kutuzov purposely presents his troops in ragged boots and uniforms to shame the Austrian high command. General Mack arrives dejected after the disaster at Ulm ('Le malheureux Mack').",
+          connections: "Kutuzov, Prince Andrei"
+        },
+        {
+          year: "1805",
+          date: "23 Oct.",
+          campaign: "1805",
+          type: "movement",
+          title: "The Russian army crosses the Enns",
+          desc: "Kutuzov conducts an orderly strategic retreat before Napoleon's overwhelming force. The Pavlograd hussars (with Nikolai Rostov) burn the bridge under fire.",
+          connections: "Nikolai Rostov, Bagration"
+        },
+        {
+          year: "1805",
+          date: "24 Oct.",
+          campaign: "1805",
+          type: "battle",
+          title: "Fight at Amstetten",
+          desc: "Russian rearguard clash with Murat's pursuing cavalry forces during the retreat through Lower Austria.",
+          connections: "Rearguard troops, Kutuzov"
+        },
+        {
+          year: "1805",
+          date: "28 Oct.",
+          campaign: "1805",
+          type: "movement",
+          title: "The Russian army crosses the Danube",
+          desc: "Kutuzov slips across the river, destroying bridges behind him to break direct contact with Napoleon's main army.",
+          connections: "Kutuzov"
+        },
+        {
+          year: "1805",
+          date: "30 Oct.",
+          campaign: "1805",
+          type: "battle",
+          title: "Defeats Mortier at Dürrenstein",
+          desc: "Kutuzov turns and inflicts a sharp blow on Marshal Mortier's isolated French VIII Corps along the Danube valley, providing the first Russian military victory.",
+          connections: "Kutuzov, Prince Andrei (sent as messenger to Brünn)"
+        },
+        {
+          year: "1805",
+          date: "4 Nov.",
+          campaign: "1805",
+          type: "battle",
+          title: "Napoleon writes to Murat. Battle of Schön Grabern",
+          desc: "Napoleon writes from Schönbrunn rebuking Murat for foolish truces. Bagration leads a legendary rearguard stand with 4,000 men against 30,000 French to save Kutuzov's army.",
+          connections: "Bagration, Prince Andrei, Captain Tushin"
+        },
+        {
+          year: "1805",
+          date: "19 Nov.",
+          campaign: "1805",
+          type: "movement",
+          title: "The Council of War at Ostralitz",
+          desc: "General Weyrother reads his pedantic, rigid battle plan. Kutuzov visibly falls asleep, knowing that intricate map diagrams mean nothing in the chaos of battle.",
+          connections: "Kutuzov, Weyrother, Prince Andrei"
+        },
+        {
+          year: "1805",
+          date: "20 Nov.",
+          campaign: "1805",
+          type: "battle",
+          title: "Battle of Austerlitz (The Battle of the Three Emperors)",
+          desc: "Catastrophic defeat of the Austro-Russian coalition under Tsars Alexander and Francis. Andrei Bolkonsky carries a fallen standard, is wounded on the Pratzen Heights, and has his epiphany beneath the quiet sky.",
+          connections: "Napoleon, Tsar Alexander, Kutuzov, Prince Andrei"
+        },
+
+        // 1807
+        {
+          year: "1807",
+          date: "27 Jan.",
+          campaign: "1807",
+          type: "battle",
+          title: "Battle of Preussisch-Eylau",
+          desc: "Fierce, inconclusive, snow-swept bloodbath between Napoleon and Levin August von Bennigsen's Russian forces in East Prussia.",
+          connections: "Russian High Command, Denisov"
+        },
+        {
+          year: "1807",
+          date: "2 June",
+          campaign: "1807",
+          type: "battle",
+          title: "Battle of Friedland",
+          desc: "Decisive French victory compelling Tsar Alexander I to sue for peace and agree to terms with Napoleon.",
+          connections: "Napoleon, Tsar Alexander I"
+        },
+        {
+          year: "1807",
+          date: "13 June",
+          campaign: "1807",
+          type: "treaty",
+          title: "The Emperors meet at Tilsit",
+          desc: "Napoleon and Alexander I meet on a decorated raft moored in the middle of the Niemen River. Former enemies embrace, cementing an alliance. Nikolai Rostov witnesses the bewildering transition from deadly war to imperial flatteries.",
+          connections: "Napoleon, Alexander I, Nikolai Rostov, Denisov"
+        },
+
+        // 1812
+        {
+          year: "1812",
+          date: "17 May",
+          campaign: "1812",
+          type: "movement",
+          title: "Napoleon leaves Dresden",
+          desc: "Surrounded by allied princes and royal court flatterers, Napoleon departs Dresden to take personal command of the Grande Armée of more than half a million soldiers.",
+          connections: "Napoleon"
+        },
+        {
+          year: "1812",
+          date: "12 June",
+          campaign: "1812",
+          type: "battle",
+          title: "Napoleon crosses the Niemen and enters Russia",
+          desc: "The French Grand Army crosses into the Russian Empire without a formal declaration of war, inaugurating the fateful Patriotic War of 1812.",
+          connections: "Napoleon, Russian border outposts"
+        },
+        {
+          year: "1812",
+          date: "14 June",
+          campaign: "1812",
+          type: "movement",
+          title: "Alexander sends Balashev to Napoleon",
+          desc: "General Balashev delivers the Tsar's personal message stating that peace is possible if French troops retreat behind the Niemen. Napoleon responds with boastful condescension in Vilna.",
+          connections: "Alexander I, Balashev, Napoleon"
+        },
+        {
+          year: "1812",
+          date: "13 July",
+          campaign: "1812",
+          type: "battle",
+          title: "Pavlograd hussars in action at Ostrovna",
+          desc: "Nikolai Rostov leads a successful cavalry charge, capturing a French officer, but feels sudden disillusionment and horror at the personal reality of hurting another human being.",
+          connections: "Nikolai Rostov"
+        },
+        {
+          year: "1812",
+          date: "4 Aug.",
+          campaign: "1812",
+          type: "fictional",
+          title: "Alpatych at Smolensk hears distant firing",
+          desc: "The Bolkonsky family steward travels into the trading city on business and experiences the eerie rumblings that signal the city's impending doom.",
+          connections: "Alpatych, Prince Nikolai Bolkonsky"
+        },
+        {
+          year: "1812",
+          date: "5 Aug.",
+          campaign: "1812",
+          type: "battle",
+          title: "Bombardment and Burning of Smolensk",
+          desc: "Smolensk is set ablaze. Barclay and Bagration evacuate the city, leaving the French conquerors in possession of smoking ruins.",
+          connections: "Smolensk citizens, Barclay de Tolly, Bagration"
+        },
+        {
+          year: "1812",
+          date: "7 Aug.",
+          campaign: "1812",
+          type: "fictional",
+          title: "Prince Nikolai Bolkonsky leaves Bald Hills for Bogucharovo",
+          desc: "Refusing to believe the French are advancing, the old Prince suffers a stroke while attempting to organize an armed peasant militia, dying shortly after.",
+          connections: "Old Prince Nikolai Bolkonsky, Princess Marya"
+        },
+        {
+          year: "1812",
+          date: "8 Aug.",
+          campaign: "1812",
+          type: "movement",
+          title: "Kutuzov appointed Commander-in-Chief",
+          desc: "Under enormous public pressure in Saint Petersburg and Moscow, Tsar Alexander reluctantly appoints the popular 67-year-old Kutuzov to lead the army.",
+          connections: "Tsar Alexander I, Mikhail Kutuzov"
+        },
+        {
+          year: "1812",
+          date: "10 Aug.",
+          campaign: "1812",
+          type: "fictional",
+          title: "Prince Andrei's regiment abreast of Bald Hills",
+          desc: "Prince Andrei marches past his abandoned ancestral estate. Finding his father's house gutted and plums stolen from the garden, he recognizes the total rupture of his former life.",
+          connections: "Prince Andrei Bolkonsky"
+        },
+        {
+          year: "1812",
+          date: "17 Aug.",
+          campaign: "1812",
+          type: "movement",
+          title: "Kutuzov at Tsarevo-Zaymishche; Rostov at Bogucharovo",
+          desc: "Kutuzov takes command of the army. Simultaneously, Nikolai Rostov arrives at Bogucharovo, suppresses a peasant riot, and rescues the terrified Princess Marya Bolkonskaya.",
+          connections: "Kutuzov, Nikolai Rostov, Princess Marya"
+        },
+        {
+          year: "1812",
+          date: "24 Aug.",
+          campaign: "1812",
+          type: "battle",
+          title: "Battle of the Shevardino Redoubt",
+          desc: "The bloody preliminary clash fought to buy time for the Russian army to fortify its main position at Borodino.",
+          connections: "Bagration, French vanguard"
+        },
+        {
+          year: "1812",
+          date: "26 Aug.",
+          campaign: "1812",
+          type: "battle",
+          title: "The Battle of Borodino",
+          desc: "The colossal, cataclysmic clash outside Moscow with over 70,000 casualties in a single day. Pierre witnesses the horrors at Raevsky Redoubt; Andrei is mortally wounded by an exploding shell; Napoleon's aura of invincibility is broken.",
+          connections: "Napoleon, Kutuzov, Pierre Bezukhov, Prince Andrei, Bagration"
+        }
+      ]
+    };
+
+    /* ========================================================
+       TAB SWITCHING
+       ======================================================== */
+    const tabButtons = document.querySelectorAll(".tab-btn");
+    const tabViews = document.querySelectorAll(".tab-view");
+
+    tabButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        tabButtons.forEach(b => b.classList.remove("active"));
+        tabViews.forEach(v => v.classList.remove("active"));
+
+        btn.classList.add("active");
+        const targetView = document.getElementById(`view-${btn.dataset.tab}`);
+        if (targetView) targetView.classList.add("active");
+
+        if (btn.dataset.tab === "mindmap") {
+          resizeCanvas();
+        }
+      });
+    });
+
+    /* ========================================================
+       TAB 1 LOGIC: MIND MAP INTERACTIVE CANVAS
+       ======================================================== */
+    const canvas = document.getElementById("graph-canvas");
+    const ctx = canvas.getContext("2d");
+    let width, height;
+
+    // Simulation nodes & links
+    let nodes = [];
+    let links = [];
+    let selectedNode = null;
+    let hoveredNode = null;
+    let draggedNode = null;
+
+    let panX = 0;
+    let panY = 0;
+    let zoom = 1;
+
+    let isPanning = false;
+    let startX, startY;
+    let activeFilter = "all";
+    let searchQuery = "";
+
+    function initGraphData() {
+      nodes = DATA.nodes.map((d, index) => {
+        const angle = (index / DATA.nodes.length) * 2 * Math.PI;
+        const radius = d.category === "principle" ? 180 : (d.category === "historical" ? 340 : 260);
+        return {
+          ...d,
+          x: Math.cos(angle) * radius + (Math.random() - 0.5) * 40,
+          y: Math.sin(angle) * radius + (Math.random() - 0.5) * 40,
+          vx: 0,
+          vy: 0,
+          radius: d.category === "principle" ? 22 : 18
+        };
+      });
+
+      // Build link references
+      links = [];
+      const nodeMap = new Map(nodes.map(n => [n.id, n]));
+      nodes.forEach(source => {
+        source.connections.forEach(targetId => {
+          const target = nodeMap.get(targetId);
+          if (target) {
+            // Avoid duplicates
+            const exists = links.some(l => 
+              (l.source.id === source.id && l.target.id === target.id) ||
+              (l.source.id === target.id && l.target.id === source.id)
+            );
+            if (!exists) links.push({ source, target });
+          }
+        });
+      });
+    }
+
+    function resizeCanvas() {
+      const container = document.getElementById("view-mindmap");
+      width = canvas.width = container.clientWidth;
+      height = canvas.height = container.clientHeight;
+      if (panX === 0 && panY === 0) {
+        panX = width / 2;
+        panY = height / 2;
+      }
+    }
+
+    // Force simulation step
+    function updatePhysics() {
+      const repulsion = 1800;
+      const springLength = 140;
+      const springK = 0.04;
+      const damping = 0.88;
+
+      // Node repulsion
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const n1 = nodes[i];
+          const n2 = nodes[j];
+          const dx = n2.x - n1.x;
+          const dy = n2.y - n1.y;
+          const dist = Math.hypot(dx, dy) || 1;
+          if (dist < 450) {
+            const force = repulsion / (dist * dist);
+            const fx = (dx / dist) * force;
+            const fy = (dy / dist) * force;
+            n1.vx -= fx;
+            n1.vy -= fy;
+            n2.vx += fx;
+            n2.vy += fy;
+          }
+        }
+      }
+
+      // Link springs
+      links.forEach(l => {
+        const dx = l.target.x - l.source.x;
+        const dy = l.target.y - l.source.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        const force = (dist - springLength) * springK;
+        const fx = (dx / dist) * force;
+        const fy = (dy / dist) * force;
+        l.source.vx += fx;
+        l.source.vy += fy;
+        l.target.vx -= fx;
+        l.target.vy -= fy;
+      });
+
+      // Center gravity & update position
+      nodes.forEach(n => {
+        if (n === draggedNode) return;
+        n.vx -= n.x * 0.002;
+        n.vy -= n.y * 0.002;
+        n.vx *= damping;
+        n.vy *= damping;
+        n.x += n.vx;
+        n.y += n.vy;
+      });
+    }
+
+    function drawGraph() {
+      ctx.clearRect(0, 0, width, height);
+
+      ctx.save();
+      ctx.translate(panX, panY);
+      ctx.scale(zoom, zoom);
+
+      // Draw connections
+      links.forEach(l => {
+        const isHighlight = selectedNode && 
+          (selectedNode.id === l.source.id || selectedNode.id === l.target.id);
+        
+        ctx.beginPath();
+        ctx.moveTo(l.source.x, l.source.y);
+        ctx.lineTo(l.target.x, l.target.y);
+        ctx.strokeStyle = isHighlight ? "#d4af37" : "rgba(71, 85, 105, 0.4)";
+        ctx.lineWidth = isHighlight ? 2.5 : 1;
+        ctx.stroke();
+      });
+
+      // Draw nodes
+      nodes.forEach(n => {
+        const isMatchFilter = (activeFilter === "all" || n.category === activeFilter);
+        const isMatchSearch = !searchQuery || n.label.toLowerCase().includes(searchQuery);
+        const isDimmed = !isMatchFilter || !isMatchSearch;
+        const isSelected = selectedNode && selectedNode.id === n.id;
+        const isHovered = hoveredNode && hoveredNode.id === n.id;
+
+        ctx.globalAlpha = isDimmed ? 0.2 : 1;
+
+        // Outer glow on select/hover
+        if (isSelected || isHovered) {
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, n.radius + 7, 0, Math.PI * 2);
+          ctx.fillStyle = isSelected ? "rgba(212, 175, 55, 0.4)" : "rgba(255, 255, 255, 0.2)";
+          ctx.fill();
+        }
+
+        // Node Circle
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2);
+        ctx.fillStyle = n.color;
+        ctx.fill();
+        ctx.lineWidth = isSelected ? 3 : 1.5;
+        ctx.strokeStyle = isSelected ? "#fff" : "rgba(255,255,255,0.4)";
+        ctx.stroke();
+
+        // Label
+        ctx.font = `${n.category === 'principle' ? 'bold ' : ''}11px -apple-system, BlinkMacSystemFont, sans-serif`;
+        ctx.fillStyle = isSelected ? "#fef08a" : "#e2e8f0";
+        ctx.textAlign = "center";
+        ctx.fillText(n.label, n.x, n.y + n.radius + 14);
+
+        ctx.globalAlpha = 1;
+      });
+
+      ctx.restore();
+    }
+
+    function animate() {
+      updatePhysics();
+      drawGraph();
+      requestAnimationFrame(animate);
+    }
+
+    // Inspector handling
+    const inspector = document.getElementById("inspector-drawer");
+    const inspectTitle = document.getElementById("inspect-title");
+    const inspectTag = document.getElementById("inspect-tag");
+    const inspectRole = document.getElementById("inspect-role");
+    const inspectDesc = document.getElementById("inspect-desc");
+    const inspectQuote = document.getElementById("inspect-quote");
+    const inspectQuoteSection = document.getElementById("inspect-quote-section");
+    const inspectConnections = document.getElementById("inspect-connections");
+    const btnCloseInspector = document.getElementById("btn-close-inspector");
+
+    function openInspector(node) {
+      selectedNode = node;
+      inspectTitle.textContent = node.label;
+      inspectTag.textContent = node.category.toUpperCase();
+      inspectTag.style.background = node.color + "33";
+      inspectTag.style.color = node.color;
+      inspectRole.textContent = node.role;
+      inspectDesc.textContent = node.desc;
+
+      if (node.quote) {
+        inspectQuoteSection.style.display = "block";
+        inspectQuote.textContent = `“${node.quote}”`;
+      } else {
+        inspectQuoteSection.style.display = "none";
+      }
+
+      inspectConnections.innerHTML = "";
+      node.connections.forEach(targetId => {
+        const target = nodes.find(n => n.id === targetId);
+        if (target) {
+          const chip = document.createElement("div");
+          chip.className = "connection-chip";
+          chip.innerHTML = `<span>●</span> ${target.label}`;
+          chip.addEventListener("click", () => openInspector(target));
+          inspectConnections.appendChild(chip);
+        }
+      });
+
+      inspector.classList.add("open");
+    }
+
+    function closeInspector() {
+      inspector.classList.remove("open");
+      selectedNode = null;
+    }
+
+    btnCloseInspector.addEventListener("click", closeInspector);
+
+    // Canvas Mouse & Interaction handlers
+    function screenToWorld(sx, sy) {
+      return {
+        x: (sx - panX) / zoom,
+        y: (sy - panY) / zoom
+      };
+    }
+
+    canvas.addEventListener("mousedown", e => {
+      const rect = canvas.getBoundingClientRect();
+      const pos = screenToWorld(e.clientX - rect.left, e.clientY - rect.top);
+      
+      const clicked = nodes.find(n => Math.hypot(n.x - pos.x, n.y - pos.y) <= n.radius + 6);
+      if (clicked) {
+        draggedNode = clicked;
+        openInspector(clicked);
+      } else {
+        isPanning = true;
+        startX = e.clientX - panX;
+        startY = e.clientY - panY;
+      }
+    });
+
+    window.addEventListener("mousemove", e => {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      const pos = screenToWorld(mouseX, mouseY);
+
+      if (draggedNode) {
+        draggedNode.x = pos.x;
+        draggedNode.y = pos.y;
+        draggedNode.vx = 0;
+        draggedNode.vy = 0;
+      } else if (isPanning) {
+        panX = e.clientX - startX;
+        panY = e.clientY - startY;
+      } else {
+        hoveredNode = nodes.find(n => Math.hypot(n.x - pos.x, n.y - pos.y) <= n.radius + 6);
+        canvas.style.cursor = hoveredNode ? "pointer" : "grab";
+      }
+    });
+
+    window.addEventListener("mouseup", () => {
+      draggedNode = null;
+      isPanning = false;
+    });
+
+    canvas.addEventListener("wheel", e => {
+      e.preventDefault();
+      const zoomFactor = 1.08;
+      const mousePos = screenToWorld(e.offsetX, e.offsetY);
+      if (e.deltaY < 0) {
+        zoom = Math.min(zoom * zoomFactor, 2.5);
+      } else {
+        zoom = Math.max(zoom / zoomFactor, 0.4);
+      }
+      panX = e.offsetX - mousePos.x * zoom;
+      panY = e.offsetY - mousePos.y * zoom;
+    });
+
+    // Filters and Search
+    document.querySelectorAll(".filter-pill").forEach(pill => {
+      pill.addEventListener("click", () => {
+        document.querySelectorAll(".filter-pill").forEach(p => p.classList.remove("active"));
+        pill.classList.add("active");
+        activeFilter = pill.dataset.category;
+      });
+    });
+
+    document.getElementById("node-search").addEventListener("input", e => {
+      searchQuery = e.target.value.toLowerCase().trim();
+    });
+
+
+    /* ========================================================
+       TAB 2 LOGIC: TIMELINE RENDERING
+       ======================================================== */
+    const timelineContainer = document.getElementById("timeline-list");
+
+    function renderTimeline(filterCampaign = "all") {
+      timelineContainer.innerHTML = "";
+
+      // Group events by year
+      const years = ["1805", "1807", "1812"];
+      years.forEach(year => {
+        const eventsOfYear = DATA.timelineEvents.filter(ev => {
+          const matchYear = ev.year === year;
+          const matchFilter = (filterCampaign === "all" || ev.campaign === filterCampaign);
+          return matchYear && matchFilter;
+        });
+
+        if (eventsOfYear.length === 0) return;
+
+        const yearGroup = document.createElement("div");
+        yearGroup.className = "timeline-year-group";
+
+        const yearHeader = document.createElement("div");
+        yearHeader.className = "year-header";
+        yearHeader.textContent = year;
+        yearGroup.appendChild(yearHeader);
+
+        eventsOfYear.forEach(item => {
+          const card = document.createElement("div");
+          card.className = "timeline-card";
+
+          const badgeClass = item.type === "battle" ? "badge-battle" : 
+                            (item.type === "treaty" ? "badge-treaty" : 
+                            (item.type === "fictional" ? "badge-fictional" : "badge-movement"));
+
+          card.innerHTML = `
+            <div class="timeline-date-row">
+              <span class="t-date">${item.date}</span>
+              <span class="t-category-badge ${badgeClass}">${item.type}</span>
+            </div>
+            <div class="t-event-title">${item.title}</div>
+            <div class="t-event-desc">${item.desc}</div>
+            <div class="t-connection-ref">Crossroads: ${item.connections}</div>
+          `;
+          yearGroup.appendChild(card);
+        });
+
+        timelineContainer.appendChild(yearGroup);
+      });
+    }
+
+    document.querySelectorAll(".t-filter-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".t-filter-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        renderTimeline(btn.dataset.campaign);
+      });
+    });
+
+
+    /* ========================================================
+       TAB 3 LOGIC: ATLAS RENDERING
+       ======================================================== */
+    const atlasContainer = document.getElementById("atlas-content");
+
+    function renderAtlas() {
+      const sections = [
+        { key: "principle", title: "Core Tolstoyan Principles & Philosophy" },
+        { key: "historical", title: "Historical Figures & Commanders" },
+        { key: "bolkonsky", title: "The Bolkonsky Dynasty" },
+        { key: "bezukhov", title: "The Bezukhov Circle & Peasant Archetypes" },
+        { key: "rostov", title: "The Rostov Family" },
+        { key: "kuragin", title: "The Kuragin Family & High Society" }
+      ];
+
+      atlasContainer.innerHTML = "";
+
+      sections.forEach(sec => {
+        const secNodes = DATA.nodes.filter(n => n.category === sec.key);
+        if (secNodes.length === 0) return;
+
+        const secElem = document.createElement("section");
+        secElem.innerHTML = `<h3 class="atlas-section-title">${sec.title}</h3>`;
+
+        const grid = document.createElement("div");
+        grid.className = "cards-grid";
+
+        secNodes.forEach(node => {
+          const card = document.createElement("div");
+          card.className = "atlas-card";
+          card.innerHTML = `
+            <div class="atlas-card-header">
+              <h4 class="atlas-card-title">${node.label}</h4>
+              <span class="atlas-card-role">${node.role}</span>
+            </div>
+            <p class="atlas-card-text">${node.desc}</p>
+            ${node.quote ? `<div class="quote-box" style="margin-top:0.4rem;">“${node.quote}”</div>` : ""}
+            <div class="atlas-card-theme">Associated with: ${node.connections.map(c => {
+              const matched = DATA.nodes.find(n => n.id === c);
+              return matched ? matched.label : c;
+            }).join(", ")}</div>
+          `;
+          grid.appendChild(card);
+        });
+
+        secElem.appendChild(grid);
+        atlasContainer.appendChild(secElem);
+      });
+    }
+
+    // Initialize application
+    window.addEventListener("DOMContentLoaded", () => {
+      initGraphData();
+      resizeCanvas();
+      renderTimeline();
+      renderAtlas();
+      requestAnimationFrame(animate);
+    });
+
+    window.addEventListener("resize", resizeCanvas);
+  </script>
+</body>
+</html>
